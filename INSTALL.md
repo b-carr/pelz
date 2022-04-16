@@ -12,7 +12,7 @@ cJSON is required to build pelz.
     cd cJSON
     mkdir build
     cd build
-    cmake ..
+    cmake .. -DBUILD_SHARED_AND_STATIC_LIBS=On
     make
     make install
 

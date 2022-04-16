@@ -238,6 +238,7 @@ Enclave_Link_Flags += -Wl,-pie,-eenclave_entry
 Enclave_Link_Flags += -Wl,--export-dynamic
 Enclave_Link_Flags += -Wl,--defsym,__ImageBase=0
 Enclave_Link_Flags += -lkmip-sgx
+Enclave_Link_Flags += -lcjson
 
 Enclave_Name := pelz_enclave.so
 Test_Enclave_Name := pelz_test_enclave.so
@@ -541,23 +542,23 @@ sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
 	@echo "CC  <= $<"
 
 sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
-						sgx/common_table.o \
-     			  sgx/key_table.o \
-     			  sgx/server_table.o \
-     			  sgx/aes_keywrap_3394nopad.o \
-     			  sgx/pelz_request_handler.o \
-     			  sgx/charbuf.o \
-     			  sgx/kmyth_enclave_seal.o \
-     			  sgx/kmyth_enclave_unseal.o \
-     			  sgx/kmyth_enclave_memory_util.o \
-     			  sgx/kmyth_enclave_retrieve_key.o \
-     			  sgx/ec_key_cert_unmarshal.o \
-     			  sgx/ecdh_util.o \
-     			  sgx/sgx_retrieve_key_impl.o \
-     			  sgx/aes_gcm.o \
-     			  sgx/memory_util.o \
-     			  sgx/kmip_util.o \
-     			  sgx/enclave_helper_functions.o
+			  sgx/common_table.o \
+			  sgx/key_table.o \
+			  sgx/server_table.o \
+			  sgx/aes_keywrap_3394nopad.o \
+			  sgx/pelz_request_handler.o \
+			  sgx/charbuf.o \
+			  sgx/kmyth_enclave_seal.o \
+			  sgx/kmyth_enclave_unseal.o \
+			  sgx/kmyth_enclave_memory_util.o \
+			  sgx/kmyth_enclave_retrieve_key.o \
+			  sgx/ec_key_cert_unmarshal.o \
+			  sgx/ecdh_util.o \
+			  sgx/sgx_retrieve_key_impl.o \
+			  sgx/aes_gcm.o \
+			  sgx/memory_util.o \
+			  sgx/kmip_util.o \
+			  sgx/enclave_helper_functions.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 
