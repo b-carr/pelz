@@ -36,7 +36,8 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   *request_type = (RequestType) cJSON_GetObjectItemCaseSensitive(json, "request_type")->valueint;
   switch (*request_type)
   {    
-  case REQ_ENC:
+  case PT_REQ_ENC:
+  case CT_REQ_ENC:
   case REQ_ENC_SIGNED:
     if (encrypt_parser(json, key_id, data))
     {
@@ -45,7 +46,8 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return (1);
     }
     break;
-  case REQ_DEC: 
+  case PT_REQ_DEC:
+  case CT_REQ_DEC:
   case REQ_DEC_SIGNED:
     if (decrypt_parser(json, key_id, data))
     {
@@ -107,7 +109,8 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
   root = cJSON_CreateObject();
   switch (request_type)
   {
-  case REQ_ENC:
+  case PT_REQ_ENC:
+  case CT_REQ_ENC:
     tmp = (char *) calloc((key_id.len + 1), sizeof(char));
     memcpy(tmp, key_id.chars, key_id.len);
     cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
@@ -119,7 +122,8 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
     free(tmp);
     cJSON_AddItemToObject(root, "enc_out_len", cJSON_CreateNumber(data.len));
     break;
-  case REQ_DEC:
+  case PT_REQ_DEC:
+  case CT_REQ_DEC:
     tmp = (char *) calloc((key_id.len + 1), sizeof(char));
     memcpy(tmp, key_id.chars, key_id.len);
     cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));

@@ -2,6 +2,7 @@
 #include "pelz_request_handler.h"
 #include "common_table.h"
 #include "aes_keywrap_3394nopad.h"
+#include "aes_gcm.h"
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
@@ -19,7 +20,8 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
   //Encrypt or Decrypt data per request_type
   switch (request_type)
   {
-  case REQ_ENC:
+  case PT_REQ_ENC:
+  case CT_REQ_ENC:
     if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (data.len < 16
         || data.len % 8 != 0))
     {
@@ -31,7 +33,8 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
       return ENCRYPT_ERROR;
     }
     break;
-  case REQ_DEC:
+  case PT_REQ_DEC:
+  case CT_REQ_DEC:
     if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (data.len < 24
         || data.len % 8 != 0))
     {
