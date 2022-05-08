@@ -66,37 +66,49 @@ int main(int argc, char **argv)
       usage(argv[0]);
       return 0;
     case 'm':
-      if (optarg && (mr = atol(optarg)) > 0)
+      if (optarg)
       {
-        max_requests = (int) mr;
-        break;
-      }
-      else
-      {
-        pelz_log(LOG_ERR, "max_request must be an integer. Received invalid option '%s'", optarg);
-        return 1;
+	mr = strtol(optarg, NULL, 10);
+	if(mr > 0 && mr < INT_MAX)
+	{
+	  max_requests = (int) mr;
+	  break;
+	}
+	else
+	{
+	  pelz_log(LOG_ERR, "max_request must be an integer. Received invalid option '%s'", optarg);
+	  return 1;
+	}
       }
     case 'p':
-      if (optarg && (p = atol(optarg)) > 0)
+      if (optarg)
       {
-        port_open = (int) p;
-        break;
-      }
-      else
-      {
-        pelz_log(LOG_ERR, "Open port must be an integer. Received invalid option '%s'", optarg);
-        return 1;
+	p = strtol(optarg, NULL, 10);
+	if(p > 0 && p < UINT16_MAX)
+	{
+	  port_open = (int) p;
+	  break;
+	}
+	else
+	{
+	  pelz_log(LOG_ERR, "Received invalid open port option '%s'", optarg);
+	  return 1;
+	}
       }
     case 'a':
-      if (optarg && (a = atol(optarg)) > 0)
+      if (optarg)
       {
-	port_attested = (int) a;
-	break;
-      }
-      else
-      {
-	pelz_log(LOG_ERR, "Attested port must be an integer. Received invalid option '%s'", optarg);
-	return 1;
+	a = strtol(optarg, NULL, 10);
+	if(a > 0 && a < UINT16_MAX)
+	{
+	  port_attested = (int) a;
+	  break;
+	}
+	else
+	{
+	  pelz_log(LOG_ERR, "Attested port must be an integer. Received invalid option '%s'", optarg);
+	  return 1;
+	}
       }
     case 's':
       secure = true;
