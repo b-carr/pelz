@@ -23,7 +23,8 @@ static void usage(const char *prog)
     "options are: \n\n"
     " -h or --help          Help (displays this usage).\n"
     " -m or --max_requests  Maximum number of sockets pelz can make available at any given time, default: 100\n"
-    " -p or --port          Port number for socket connetion to receive request messages, default: 10600\n"
+    " -p or --port_open     Port number for connections not requiring SGX enclave attestation; default: 10600\n"
+    " -a or --port_attested Port number for connections requiring SGX enclave atttestation; default: 10601\n"
     " -s or --secure        Only use the enclave attestation port to receive request messages.\n"
     " -v or --verbose       Enable detailed logging.\n", prog);
 }
@@ -31,7 +32,8 @@ static void usage(const char *prog)
 const struct option longopts[] = {
   {"help", no_argument, 0, 'h'},
   {"max_requests", required_argument, 0, 'm'},
-  {"port", required_argument, 0, 'p'},
+  {"port_open", required_argument, 0, 'p'},
+  {"port_attested", required_argument, 0, 'a'},
   {"secure", no_argument, 0, 's'},
   {"verbose", no_argument, 0, 'v'},
   {0, 0, 0, 0}
@@ -47,14 +49,16 @@ int main(int argc, char **argv)
   set_applog_severity_threshold(LOG_WARNING);
 
   int max_requests = 100;
-  int port = 10600;
+  int port_open = 10600;
+  int port_attested = 10601;
   int options;
   int option_index;
   long mr = 0;
   long p = 0;
+  long a = 0;
   bool secure = false;
 
-  while ((options = getopt_long(argc, argv, "m:p:hv", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "m:p:a:hv", longopts, &option_index)) != -1)
   {
     switch (options)
     {
@@ -75,13 +79,24 @@ int main(int argc, char **argv)
     case 'p':
       if (optarg && (p = atol(optarg)) > 0)
       {
-        port = (int) p;
+        port_open = (int) p;
         break;
       }
       else
       {
         pelz_log(LOG_ERR, "Port must be an integer. Received invalid option '%s'", optarg);
         return 1;
+      }
+    case 'a':
+      if (optarg && (a = atol(optarg)) > 0)
+      {
+	port_attested = (int) a;
+	break;
+      }
+      else
+      {
+	pelz_log(LOG_ERR, "Port must be an integer. Received invalid option '%s'", optarg);
+	return 1;
       }
     case 's':
       secure = true;
@@ -127,7 +142,7 @@ int main(int argc, char **argv)
     return (1);
   }
 
-  pelz_service((const int) max_requests, (const int) port, secure);
+  pelz_service((const int) max_requests, (const int) port_open, (const int) port_attested, secure);
 
   pelz_log(LOG_INFO, "Shutdown Clean-up Start");
   private_pkey_free(eid, &status);
