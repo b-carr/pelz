@@ -84,7 +84,7 @@ int main(int argc, char **argv)
       }
       else
       {
-        pelz_log(LOG_ERR, "Port must be an integer. Received invalid option '%s'", optarg);
+        pelz_log(LOG_ERR, "Open port must be an integer. Received invalid option '%s'", optarg);
         return 1;
       }
     case 'a':
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
       }
       else
       {
-	pelz_log(LOG_ERR, "Port must be an integer. Received invalid option '%s'", optarg);
+	pelz_log(LOG_ERR, "Attested port must be an integer. Received invalid option '%s'", optarg);
 	return 1;
       }
     case 's':
