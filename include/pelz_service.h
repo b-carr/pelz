@@ -17,7 +17,7 @@
  *
  * @param[in] max_requests  the maximum number of simultaneous socket connections
  * @param[in] port_open     the port number non-attested connections
- * @param[in] port_attested the prot number for attested connections
+ * @param[in] port_attested the port number for attested connections
  * @param[in] secure        value to determine if attestation only connection
  *
  * @returns 0 on success, 1, on error
