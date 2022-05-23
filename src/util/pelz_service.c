@@ -55,12 +55,13 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
 
   if (!secure)
   {
-    threadArgs.lock = lock;
-    threadArgs.port = port_open;
-    threadArgs.max_requests = max_requests;
+    ThreadArgs openThreadArgs;
+    openThreadArgs.lock = lock;
+    openThreadArgs.port = port_open;
+    openThreadArgs.max_requests = max_requests;
     pthread_t unsecure_socket_thread;
 
-    if (pthread_create(&unsecure_socket_thread, NULL, unsecure_thread_wrapper, &threadArgs))
+    if (pthread_create(&unsecure_socket_thread, NULL, unsecure_thread_wrapper, &openThreadArgs))
     {
       pelz_log(LOG_ERR, "Unable to start thread to monitor unsecure socket");
       return 1;
