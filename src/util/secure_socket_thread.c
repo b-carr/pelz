@@ -10,7 +10,7 @@
 #include "pelz_log.h"
 #include "pelz_socket.h"
 #include "pelz_json_parser.h"
-#include "pelz_io.h"
+#include "key_load.h"
 #include "pelz_service.h"
 #include "pelz_request_handler.h"
 #include "secure_socket_thread.h"
@@ -28,16 +28,26 @@ static void *secure_process_wrapper(void *arg)
   pthread_exit(NULL);
 }
 
-void secure_socket_thread(void *arg)
+void *secure_socket_thread(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
-  int socket_listen_id = threadArgs->socket_id;
+  int port = threadArgs->port;
   int max_requests = threadArgs->max_requests;
   pthread_mutex_t lock = threadArgs->lock;
 
   ThreadArgs processArgs;
   pthread_t stid[max_requests];
   int socket_id = 0;
+  int socket_listen_id;
+
+  //Initializing Socket
+  if (pelz_key_socket_init(max_requests, port, &socket_listen_id))
+  {
+    pelz_log(LOG_ERR, "Socket Initialization Error");
+    return NULL;
+  }
+  global_secure_socket_active = true;
+  pelz_log(LOG_DEBUG, "Secure socket on port %d created with listen_id of %d", port, socket_listen_id);
 
   do
   {
@@ -51,6 +61,7 @@ void secure_socket_thread(void *arg)
     {
       continue;
     }
+    pelz_log(LOG_DEBUG, "Secure socket connection accepted");
 
     if (socket_id > max_requests)
     {
@@ -70,12 +81,13 @@ void secure_socket_thread(void *arg)
 
     pelz_log(LOG_INFO, "Secure Socket Thread %d, %d", (int) stid[socket_id], socket_id);
   }
-  while (socket_listen_id >= 0 && socket_id <= (max_requests + 1));
-  return;
+  while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
+  pelz_key_socket_teardown(&socket_listen_id);
+  return NULL;
 }
 
 //This function will need to be changed with the attestation handshake and process flow
-void secure_socket_process(void *arg)
+void *secure_socket_process(void *arg)
 {
   ThreadArgs *processArgs = (ThreadArgs *) arg;
   int new_socket = processArgs->socket_id;
@@ -85,6 +97,8 @@ void secure_socket_process(void *arg)
   charbuf message;
   RequestResponseStatus status;
   const char *err_message;
+
+  //Attestation handshake function should be added here in the process flow
 
   while (!pelz_key_socket_check(new_socket))
   {
@@ -97,7 +111,7 @@ void secure_socket_process(void *arg)
         continue;
       }
       pelz_key_socket_close(new_socket);
-      return;
+      return NULL;
     }
 
     pelz_log(LOG_DEBUG, "%d::Request & Length: %.*s, %d", new_socket, (int) request.len, request.chars, (int) request.len);
@@ -105,8 +119,8 @@ void secure_socket_process(void *arg)
     RequestType request_type = REQ_UNK;
 
     charbuf key_id;
-    charbuf data_in;
-    charbuf data_out;
+    charbuf data_in;        
+    charbuf data_out;       
     charbuf request_sig;
     charbuf requestor_cert;
 
@@ -121,7 +135,7 @@ void secure_socket_process(void *arg)
       pelz_log(LOG_DEBUG, "%d::Error: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
       pelz_key_socket_close(new_socket);
       free_charbuf(&request);
-      return;
+      return NULL;
     }
 
     free_charbuf(&request);
@@ -199,11 +213,11 @@ void secure_socket_process(void *arg)
         continue;
       }
       pelz_key_socket_close(new_socket);
-      return;
+      return NULL;
     }
     free_charbuf(&message);
   }
   pelz_key_socket_close(new_socket);
-  return;
+  return NULL;
 }
 

@@ -6,13 +6,14 @@
 typedef struct
 {
   int socket_id;
+  int port;
   int max_requests;
   pthread_mutex_t lock;
 } ThreadArgs;
 
 /**
  * <pre>
- * Function executed on generation of secure socket to listin for connections
+ * Function executed on generation of secure socket to listen for connections
  * <pre>
  *
  * @param[in] arg a pointer to a structure containing the
@@ -21,7 +22,7 @@ typedef struct
  *
  * @return none
  */
-void secure_socket_thread(void *arg);
+void *secure_socket_thread(void *arg);
 
 /**
  * <pre>
@@ -34,6 +35,6 @@ void secure_socket_thread(void *arg);
  *
  * @return none
  */
-void secure_socket_process(void *arg);
+void *secure_socket_process(void *arg);
 
 #endif

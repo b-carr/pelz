@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   long a = 0;
   bool secure = false;
 
-  while ((options = getopt_long(argc, argv, "m:p:a:hv", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "m:p:a:hsv", longopts, &option_index)) != -1)
   {
     switch (options)
     {
@@ -70,45 +70,45 @@ int main(int argc, char **argv)
       {
 	mr = strtol(optarg, NULL, 10);
 	if(mr > 0 && mr < INT_MAX)
-	{
-	  max_requests = (int) mr;
-	  break;
-	}
+	  {
+	    max_requests = (int) mr;
+	    break;
+	  }
 	else
-	{
-	  pelz_log(LOG_ERR, "max_request must be an integer. Received invalid option '%s'", optarg);
-	  return 1;
-	}
+	  {
+	    pelz_log(LOG_ERR, "max_request must be an integer. Received invalid option '%s'", optarg);
+	    return 1;
+	  }
       }
     case 'p':
       if (optarg)
       {
-	p = strtol(optarg, NULL, 10);
-	if(p > 0 && p < UINT16_MAX)
-	{
-	  port_open = (int) p;
-	  break;
-	}
-	else
-	{
-	  pelz_log(LOG_ERR, "Open port must be an integer. Received invalid open port option '%s'", optarg);
-	  return 1;
-	}
+	      p = strtol(optarg, NULL, 10);
+	      if(p > 0 && p < UINT16_MAX)
+	      {
+	        port_open = (int) p;
+	        break;
+	      }
+	      else
+	      {
+	        pelz_log(LOG_ERR, "Open port must be an integer. Received invalid open port option '%s'", optarg);
+	        return 1;
+	      }
       }
     case 'a':
       if (optarg)
       {
-	a = strtol(optarg, NULL, 10);
-	if(a > 0 && a < UINT16_MAX)
-	{
-	  port_attested = (int) a;
-	  break;
-	}
-	else
-	{
-	  pelz_log(LOG_ERR, "Attested port must be an integer. Received invalid atteseted port option '%s'", optarg);
-	  return 1;
-	}
+	      a = strtol(optarg, NULL, 10);
+	      if(a > 0 && a < UINT16_MAX)
+	      {
+	        port_attested = (int) a;
+	        break;
+	      }
+	      else
+	      {
+	        pelz_log(LOG_ERR, "Attested port must be an integer. Received invalid atteseted port option '%s'", optarg);
+	        return 1;
+	      }
       }
     case 's':
       secure = true;
@@ -167,6 +167,8 @@ int main(int argc, char **argv)
   pelz_log(LOG_INFO, "Kmyth Unsealed Data Table Cleanup Complete");
   table_destroy(eid, &status, SERVER);
   pelz_log(LOG_INFO, "Server Table Destroy Complete");
+  table_destroy(eid, &status, CA_TABLE);
+  pelz_log(LOG_INFO, "CA Table Destroy Complete");
   table_destroy(eid, &status, KEY);
   pelz_log(LOG_INFO, "Key Table Destroy Complete");
   sgx_destroy_enclave(eid);

@@ -6,7 +6,7 @@
 
 /**
  * <pre>
- * Function executed on generation of unsecure socket to listin for connections
+ * Function executed on generation of unsecure socket to listen for connections
  * <pre>
  * 
  * @param[in] arg a pointer to a structure containing the 
@@ -15,7 +15,7 @@
  *
  * @return none
  */
-void unsecure_socket_thread(void *arg);
+void *unsecure_socket_thread(void *arg);
 
 /**
  * <pre>
@@ -28,6 +28,6 @@ void unsecure_socket_thread(void *arg);
  *
  * @return none
  */
-void unsecure_socket_process(void *arg);
+void *unsecure_socket_process(void *arg);
 
 #endif

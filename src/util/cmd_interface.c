@@ -8,7 +8,7 @@
 
 #include "cmd_interface.h"
 #include "pelz_log.h"
-#include "pelz_io.h"
+#include "pipe_io.h"
 
 CmdArgValue check_arg(char *arg)
 {
@@ -70,6 +70,12 @@ CmdArgValue check_arg(char *arg)
   if ((memcmp(arg, "private", 7) == 0) && (strlen(arg) == 7))
   {
     return PRIVATE;
+  }
+
+  //Checking for ca keyword
+  if ((memcmp(arg, "ca", 2) == 0) && (strlen(arg) == 2))
+  {
+    return CA;
   }
 
   return OTHER;        

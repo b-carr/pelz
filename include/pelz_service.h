@@ -9,6 +9,10 @@
 
 #include "pelz_request_handler.h"
 
+extern bool global_pipe_reader_active;
+extern bool global_secure_socket_active;
+extern bool global_unsecure_socket_active;
+
 /**
  * <pre>
  * Implements the pelz_service which listens on a specifed port for

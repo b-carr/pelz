@@ -8,7 +8,8 @@
 
 #include "charbuf.h"
 #include "pelz_log.h"
-#include "pelz_io.h"
+#include "pipe_io.h"
+#include "parse_pipe_message.h"
 #include "pelz_socket.h"
 #include "fifo_thread.h"
 
@@ -98,7 +99,8 @@ void *fifo_thread_process(void *arg)
   int ret = 0;
   char resp[BUFSIZE];
 
-  const char *resp_str[27] =
+  // These messages correspond to each value in the ParseResponseStatus enum
+  const char *resp_str[35] =
     { "Invalid pipe command received by pelz-service.",
       "Successfully initiated termination of pelz-service.",
       "Unable to read file",
@@ -125,7 +127,15 @@ void *fifo_thread_process(void *arg)
       "No entries in Key Table.",
       "Key Table List:",
       "No entries in Server Table.",
-      "PKI Certificate List:"
+      "PKI Certificate List:",
+      "Failure to load CA cert",
+      "Successfully loaded CA certificate file into pelz-service.",
+      "Failure to remove CA cert",
+      "Removed CA cert",
+      "CA Table Destroy Failure",
+      "All CA certs removed",
+      "No entries in CA Table.",
+      "CA Certificate List:",
   };
 
   if (mkfifo(PELZSERVICE, MODE) == 0)
@@ -175,6 +185,9 @@ void *fifo_thread_process(void *arg)
       case SERVER_LIST:
         send_table_id_list(tokens[2], SERVER, resp_str[ret]);
         break;
+      case CA_LIST:
+        send_table_id_list(tokens[2], CA_TABLE, resp_str[ret]);
+        break;
       default:
         sprintf(resp, "%s\nEND\n", resp_str[ret]);
         if (write_to_pipe(tokens[2], resp))
@@ -201,7 +214,8 @@ void *fifo_thread_process(void *arg)
     }
   }
   while (true);
+  pelz_log(LOG_DEBUG, "Global pipe reader thread exit");
   global_pipe_reader_active = false;
-  return NULL;
+  pthread_exit(NULL);
 }
 
