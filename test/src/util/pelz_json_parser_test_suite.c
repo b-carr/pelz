@@ -48,14 +48,13 @@ void test_request_decoder(void)
   cJSON *json_dec_signed;
 
   const char *invalid_request[4] = {
-    "{\"key_id_len\": 28, \"key_id\": \"file:/test/testkeys/key2.txt\"}",
+    "\{\"key_id\": \"file:/test/testkeys/key2.txt\"}",
     "{\"request_type\": \"one\"}", "{\"request_type\": 0}", "{\"request_type\": 7}"
   };
   const char *json_key_id[6] = {
     "file:/test/key1.txt", "file:/test/key2.txt", "file:/test/key3.txt",
     "file:/test/key4.txt", "file:/test/key5.txt", "file:/test/key6.txt"
   };
-  unsigned int json_key_id_len = 19;
 
   const char *enc_data[6] = {
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=\n",
@@ -108,9 +107,7 @@ void test_request_decoder(void)
   for (int i = 0; i < 6; i++)
   {
     cJSON_AddItemToObject(json_enc, "key_id", cJSON_CreateString(json_key_id[i]));
-    cJSON_AddItemToObject(json_enc, "key_id_len", cJSON_CreateNumber(json_key_id_len));
     cJSON_AddItemToObject(json_enc, "data", cJSON_CreateString(enc_data[i]));
-    cJSON_AddItemToObject(json_enc, "data_len", cJSON_CreateNumber(enc_data_len[i]));
     cJSON_AddItemToObject(json_enc, "cipher", cJSON_CreateString("AES256-GCM"));
 
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
@@ -120,7 +117,7 @@ void test_request_decoder(void)
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &cipher, &iv, &tag, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_ENC);
-    CU_ASSERT(key_id.len == json_key_id_len);
+    CU_ASSERT(key_id.len == strlen(json_key_id[i]));
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
     CU_ASSERT(json_data.len == enc_data_len[i]);
     CU_ASSERT(memcmp(json_data.chars, enc_data[i], json_data.len) == 0);
@@ -131,11 +128,7 @@ void test_request_decoder(void)
 
     //Free the cJSON Objects to allow the addition of the next Object per the loop
     cJSON_DeleteItemFromObject(json_enc, "data");
-    cJSON_DeleteItemFromObject(json_enc, "data_len");
     cJSON_DeleteItemFromObject(json_enc, "key_id");
-    cJSON_DeleteItemFromObject(json_enc, "key_id_len");
-    cJSON_DeleteItemFromObject(json_dec, "key_id");
-    cJSON_DeleteItemFromObject(json_dec, "key_id_len");
     cJSON_DeleteItemFromObject(json_enc, "cipher");
   }
  
