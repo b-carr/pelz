@@ -24,39 +24,20 @@
  * @return A charbuf containing the data from the field, or a charbuf
  *         of length 0 on error.
  */
-static charbuf get_JSON_field(cJSON* json, const char* field_name)
+static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
 {
-  char* field_name_len = (char*)calloc(strlen(field_name) + 5, sizeof(char));
-  if(field_name_len == NULL)
+  charbuf field;
+  if(!cJSON_HasObjectItem(json, field_name) || !cJSON_IsString(cJSON_GetObjectItem(json, field_name)))
   {
-    pelz_log(LOG_ERR, "Unable to extract JSON field %s.", field_name);
+    pelz_log(LOG_ERR, "Missing JSON field %s.", field_name);
     return new_charbuf(0);
-  }
-  memcpy(field_name_len, field_name, strlen(field_name));
-  memcpy(field_name_len + strlen(field_name), "_len", 4);
-  if(!cJSON_HasObjectItem(json, field_name) ||
-     !cJSON_IsString(cJSON_GetObjectItem(json, field_name)) ||
-     !cJSON_HasObjectItem(json, field_name_len) ||
-     !cJSON_IsNumber(cJSON_GetObjectItem(json, field_name_len)))
-  {
-    pelz_log(LOG_ERR, "Unable to extract JSON field %s.", field_name);
-    return new_charbuf(0);
-  }
-  charbuf field = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, field_name_len)->valueint);
-  if(field.len == 0 || field.chars == NULL)
-  {
-    pelz_log(LOG_ERR, "Failed to allocate memory to extract JSON field %s.", field_name);
-    free(field_name_len);
-    free_charbuf(&field);
-    return new_charbuf(0);
-  }
-  free(field_name_len);
+  } 
   if(cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring != NULL)
   {
-    if(strlen(cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring) != field.len)
-    {
-      pelz_log(LOG_ERR,"Size mismatch in JSON field %s.", field_name);
-      free_charbuf(&field);
+    field = new_charbuf(strlen(cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring));
+    if(field.len == 0 || field.chars == NULL)
+    {  
+      pelz_log(LOG_ERR, "Failed to allocate memory to extract JSON field %s.", field_name);
       return new_charbuf(0);
     }
     memcpy(field.chars, cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring, field.len);
@@ -64,7 +45,6 @@ static charbuf get_JSON_field(cJSON* json, const char* field_name)
   else
   {
     pelz_log(LOG_ERR, "No value in JSON field %s.", field_name);
-    free_charbuf(&field);
     return new_charbuf(0);
   }
   return field;
@@ -103,13 +83,13 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   case REQ_ENC_SIGNED:
   case REQ_DEC:
   case REQ_DEC_SIGNED:
-    *key_id = get_JSON_field(json, "key_id");
+    *key_id = get_JSON_string_field(json, "key_id");
     if(key_id->len == 0 || key_id->chars == NULL)
     {
       free_charbuf(key_id);
       return 1;
     }
-    *data = get_JSON_field(json, "data");
+    *data = get_JSON_string_field(json, "data");
     if(data->len == 0 || data->chars == NULL)
     {
       free_charbuf(key_id);
