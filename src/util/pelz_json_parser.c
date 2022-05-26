@@ -27,7 +27,8 @@
 static charbuf get_JSON_field(cJSON* json, const char* field_name)
 {
   char* field_name_len = (char*)calloc(strlen(field_name) + 5, sizeof(char));
-  if(field_name_len == NULL){
+  if(field_name_len == NULL)
+  {
     pelz_log(LOG_ERR, "Unable to extract JSON field %s.", field_name);
     return new_charbuf(0);
   }
@@ -72,12 +73,10 @@ static charbuf get_JSON_field(cJSON* json, const char* field_name)
 int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
-  char *str = NULL;
-
-  str = (char *) calloc((request.len + 1), sizeof(char));
-  memcpy(str, request.chars, request.len);
-  json = cJSON_Parse(str);
+  unsigned char* str = null_terminated_string_from_charbuf(request);
+  json = cJSON_Parse((char*)str);
   free(str);
+
   if (!cJSON_HasObjectItem(json, "request_type"))
   {
     pelz_log(LOG_ERR, "Missing required JSON key: request_type.");
@@ -92,8 +91,6 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   }
   *request_type = (RequestType) cJSON_GetObjectItemCaseSensitive(json, "request_type")->valueint;
 
-  // The following fields are included whether the type is for an encryption
-  // or a decryption.
   if(!cJSON_HasObjectItem(json, "key_id"))
   {
     pelz_log(LOG_ERR, "Missign required JSON field: key_id.");
@@ -104,20 +101,20 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   {    
   case REQ_ENC:
   case REQ_ENC_SIGNED:
-    if (encrypt_parser(json, key_id, data))
-    {
-      pelz_log(LOG_ERR, "Encrypt Request Parser Error");
-      cJSON_Delete(json);
-      return (1);
-    }
-    break;
-  case REQ_DEC: 
+  case REQ_DEC:
   case REQ_DEC_SIGNED:
-    if (decrypt_parser(json, key_id, data))
+    *key_id = get_JSON_field(json, "key_id");
+    if(key_id->len == 0 || key_id->chars == NULL)
     {
-      pelz_log(LOG_ERR, "Decrypt Request Parser Error");
-      cJSON_Delete(json);
-      return (1);
+      free_charbuf(key_id);
+      return 1;
+    }
+    *data = get_JSON_field(json, "data");
+    if(data->len == 0 || data->chars == NULL)
+    {
+      free_charbuf(key_id);
+      free_charbuf(data); 
+      return 1;
     }
     break;
   default:
@@ -181,9 +178,9 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
     cJSON_AddItemToObject(root, "key_id_len", cJSON_CreateNumber(key_id.len));
     tmp = (char *) calloc((data.len + 1), sizeof(char));
     memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "enc_out", cJSON_CreateString(tmp));
+    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
     free(tmp);
-    cJSON_AddItemToObject(root, "enc_out_len", cJSON_CreateNumber(data.len));
+    cJSON_AddItemToObject(root, "data_len", cJSON_CreateNumber(data.len));
     break;
   case REQ_DEC:
     tmp = (char *) calloc((key_id.len + 1), sizeof(char));
@@ -193,9 +190,9 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
     cJSON_AddItemToObject(root, "key_id_len", cJSON_CreateNumber(key_id.len));
     tmp = (char *) calloc((data.len + 1), sizeof(char));
     memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "dec_out", cJSON_CreateString(tmp));
+    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
     free(tmp);
-    cJSON_AddItemToObject(root, "dec_out_len", cJSON_CreateNumber(data.len));
+    cJSON_AddItemToObject(root, "data_len", cJSON_CreateNumber(data.len));
     break;
   default:
     pelz_log(LOG_ERR, "Request Type not recognized.");
@@ -213,48 +210,6 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
   memcpy(message->chars, tmp, message->len);
   cJSON_Delete(root);
   free(tmp);
-  return (0);
-}
-
-int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
-{
-  *key_id = get_JSON_field(json, "key_id");
-  if(key_id->len == 0 || key_id->chars == NULL)
-  {
-    pelz_log(LOG_ERR, "Missing required JSON field: key_id.");
-    free_charbuf(key_id);
-    return 1;
-  }
-
-  *data = get_JSON_field(json, "enc_data");
-  if(data->len == 0 || data->chars == NULL)
-  {
-    pelz_log(LOG_ERR, "Missing required JSON field: enc_data.");
-    free_charbuf(data);
-    free_charbuf(key_id);
-    return 1;
-  }
-  return (0);
-}
-
-int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
-{
-  *key_id = get_JSON_field(json, "key_id");
-    if(key_id->len == 0 || key_id->chars == NULL)
-  {
-    pelz_log(LOG_ERR, "Missing required JSON field: key_id.");
-    free_charbuf(key_id);
-    return 1;
-  }
-
-  *data = get_JSON_field(json, "dec_data");
-  if(data->len == 0 || data->chars == NULL)
-  {
-    pelz_log(LOG_ERR, "Missing required JSON field: enc_data.");
-    free_charbuf(data);
-    free_charbuf(key_id);
-    return 1;
-  }
   return (0);
 }
 

@@ -65,40 +65,6 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
 
 /**
  * <pre>
- * JSON Parser for client message. Parser will separate client message associated variables from a JSON message.
- * <pre>
- *
- * @param[in] json Parsed json string in cJSON format to be copied into request values
- *
- * @param[out] key_id.chars The key identifier
- * @param[out] key_id.len The length of key identifier
- * @param[out] data.chars The data to be encrypted
- * @param[out] data.len The length of data
- *
- * @return 0 on success, 1 on error
- *
- */
-int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
-
-/**
- * <pre>
- * JSON Parser for client message. Parser will separate client message associated variables from a JSON message.
- * <pre>
- *
- * @param[in] json Parsed json string in cJSON format to be copied into request values
- *
- * @param[out] key_id.chars The key identifier
- * @param[out] key_id.len The length of key identifier
- * @param[out] data.chars The data to be decrypted
- * @param[out] data.len The length of data
- *
- * @return 0 on success, 1 on error
- *
- */
-int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
-
-/**
- * <pre>
  * JSON Parser for a signed message. Parser will separate client message associated variables from a JSON message.
  * <pre>
  *
