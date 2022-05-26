@@ -249,6 +249,9 @@ void thread_process(void *arg)
     RequestType request_type = REQ_UNK;
 
     charbuf key_id;
+    charbuf cipher;
+    charbuf iv;
+    charbuf tag;
     charbuf data_in;
     charbuf data_out;
     charbuf request_sig;
@@ -258,7 +261,7 @@ void thread_process(void *arg)
     charbuf output;
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
+    if (request_decoder(request, &request_type, &key_id, &data_in, &cipher, &iv, &tag, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);

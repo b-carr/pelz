@@ -39,6 +39,9 @@ void test_request_decoder(void)
   charbuf json_data;
   charbuf request_sig;
   charbuf requestor_cert;
+  charbuf cipher;
+  charbuf iv;
+  charbuf tag;
   cJSON *json_enc;
   cJSON *json_dec;
   cJSON *json_enc_signed;
@@ -69,7 +72,7 @@ void test_request_decoder(void)
   {
     request = new_charbuf(strlen(invalid_request[i]));
     memcpy(request.chars, invalid_request[i], request.len);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &request_sig, &requestor_cert) == 1);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &cipher, &iv, &tag, &request_sig, &requestor_cert) == 1);
     free_charbuf(&request);
     request_type = REQ_UNK;
   }
@@ -88,7 +91,7 @@ void test_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &request_sig, &requestor_cert) == 1);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &cipher, &iv, &tag, &request_sig, &requestor_cert) == 1);
   free_charbuf(&json_data);
   free_charbuf(&request);
   request_type = REQ_UNK;
@@ -97,7 +100,7 @@ void test_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &request_sig, &requestor_cert) == 1);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &cipher, &iv, &tag, &request_sig, &requestor_cert) == 1);
   free_charbuf(&json_data);
   free_charbuf(&request);
   request_type = REQ_UNK;
@@ -108,13 +111,14 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_enc, "key_id_len", cJSON_CreateNumber(json_key_id_len));
     cJSON_AddItemToObject(json_enc, "data", cJSON_CreateString(enc_data[i]));
     cJSON_AddItemToObject(json_enc, "data_len", cJSON_CreateNumber(enc_data_len[i]));
+    cJSON_AddItemToObject(json_enc, "cipher", cJSON_CreateString("AES256-GCM"));
 
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &json_data, &cipher, &iv, &tag, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_ENC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
@@ -132,6 +136,7 @@ void test_request_decoder(void)
     cJSON_DeleteItemFromObject(json_enc, "key_id_len");
     cJSON_DeleteItemFromObject(json_dec, "key_id");
     cJSON_DeleteItemFromObject(json_dec, "key_id_len");
+    cJSON_DeleteItemFromObject(json_enc, "cipher");
   }
  
   cJSON_Delete(json_enc);

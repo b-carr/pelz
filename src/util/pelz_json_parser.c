@@ -61,7 +61,7 @@ static int get_JSON_int_field(cJSON* json, const char* field_name, int* value)
   return 0;
 }
 
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf* cipher, charbuf* iv, charbuf* tag, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
   unsigned char* str = null_terminated_string_from_charbuf(request);
@@ -75,25 +75,45 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return (1);
   }
 
+  *key_id = get_JSON_string_field(json, "key_id");
+  if(key_id->len == 0 || key_id->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to extract key_id from JSON.");
+    free_charbuf(key_id);
+    return 1;
+  }
+  *data = get_JSON_string_field(json, "data");
+  if(data->len == 0 || data->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to extract data from JSON.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    return 1;
+  }
+  *cipher = get_JSON_string_field(json, "cipher");
+  if(cipher->len == 0 || cipher->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to extract cipher from JSON.");
+    free_charbuf(cipher);
+    free_charbuf(key_id);
+    free_charbuf(data);
+    return 1;
+  }
   switch (*request_type)
   {    
-  case REQ_ENC:
   case REQ_ENC_SIGNED:
-  case REQ_DEC:
+    *request_sig = get_JSON_string_field(json, "request_sig");
+    *requestor_cert = get_JSON_string_field(json, "requester_cert");
+  // Intentional fallthrough
+  case REQ_ENC:
+    break;
   case REQ_DEC_SIGNED:
-    *key_id = get_JSON_string_field(json, "key_id");
-    if(key_id->len == 0 || key_id->chars == NULL)
-    {
-      free_charbuf(key_id);
-      return 1;
-    }
-    *data = get_JSON_string_field(json, "data");
-    if(data->len == 0 || data->chars == NULL)
-    {
-      free_charbuf(key_id);
-      free_charbuf(data); 
-      return 1;
-    }
+    *request_sig = get_JSON_string_field(json, "request_sig");
+    *requestor_cert = get_JSON_string_field(json, "requestor_cert");
+  // Intentional fallthrough
+  case REQ_DEC:
+    *iv = get_JSON_string_field(json, "iv");
+    *tag = get_JSON_string_field(json, "tag");
     break;
   default:
     pelz_log(LOG_WARNING, "Invalid Request Type");
