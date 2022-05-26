@@ -50,6 +50,17 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   return field;
 }
 
+static int get_JSON_int_field(cJSON* json, const char* field_name, int* value)
+{
+  if(!cJSON_HasObjectItem(json, field_name) || !cJSON_IsNumber(cJSON_GetObjectItem(json, field_name)))
+  {
+    pelz_log(LOG_ERR, "Missing JSON field %s.", field_name);
+    return 1;
+  }
+  *value = cJSON_GetObjectItemCaseSensitive(json, field_name)->valueint;
+  return 0;
+}
+
 int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
@@ -57,24 +68,11 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   json = cJSON_Parse((char*)str);
   free(str);
 
-  if (!cJSON_HasObjectItem(json, "request_type"))
+  if(get_JSON_int_field(json, "request_type", (int*)request_type))
   {
     pelz_log(LOG_ERR, "Missing required JSON key: request_type.");
     cJSON_Delete(json);
     return (1);
-  }
-  else if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "request_type")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: request_type. Data type should be integer.");
-    cJSON_Delete(json);
-    return (1);
-  }
-  *request_type = (RequestType) cJSON_GetObjectItemCaseSensitive(json, "request_type")->valueint;
-
-  if(!cJSON_HasObjectItem(json, "key_id"))
-  {
-    pelz_log(LOG_ERR, "Missign required JSON field: key_id.");
-    return 1;
   }
 
   switch (*request_type)
