@@ -470,6 +470,10 @@ sgx/sgx_retrieve_key_impl.o: kmyth/sgx/trusted/src/wrapper/sgx_retrieve_key_impl
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
+sgx/cipher.o: kmyth/src/cipher/cipher.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC   <= $<"
+
 sgx/aes_gcm.o: kmyth/src/cipher/aes_gcm.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -498,6 +502,11 @@ sgx/aes_keywrap_3394nopad.o: src/util/aes_keywrap_3394nopad.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/aes_keywrap_5649pad.o: kmyth/src/cipher/aes_keywrap_5649pad.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
+
 sgx/pelz_request_handler.o: src/util/pelz_request_handler.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
@@ -511,6 +520,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/key_table.o \
 		     sgx/server_table.o \
 		     sgx/aes_keywrap_3394nopad.o \
+		     sgx/aes_keywrap_5649pad.o \
 		     sgx/pelz_request_handler.o \
 		     sgx/charbuf.o \
 		     sgx/kmyth_enclave_seal.o \
@@ -522,7 +532,8 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/sgx_retrieve_key_impl.o \
 		     sgx/aes_gcm.o \
 		     sgx/memory_util.o \
-		     sgx/kmip_util.o 
+		     sgx/kmip_util.o \
+		     sgx/cipher.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 
@@ -541,23 +552,25 @@ sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
 	@echo "CC  <= $<"
 
 sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
-						sgx/common_table.o \
-     			  sgx/key_table.o \
-     			  sgx/server_table.o \
-     			  sgx/aes_keywrap_3394nopad.o \
-     			  sgx/pelz_request_handler.o \
-     			  sgx/charbuf.o \
-     			  sgx/kmyth_enclave_seal.o \
-     			  sgx/kmyth_enclave_unseal.o \
-     			  sgx/kmyth_enclave_memory_util.o \
-     			  sgx/kmyth_enclave_retrieve_key.o \
-     			  sgx/ec_key_cert_unmarshal.o \
-     			  sgx/ecdh_util.o \
-     			  sgx/sgx_retrieve_key_impl.o \
-     			  sgx/aes_gcm.o \
-     			  sgx/memory_util.o \
-     			  sgx/kmip_util.o \
-     			  sgx/enclave_helper_functions.o
+			  sgx/common_table.o \
+			  sgx/key_table.o \
+			  sgx/server_table.o \
+			  sgx/aes_keywrap_3394nopad.o \
+			  sgx/pelz_request_handler.o \
+			  sgx/charbuf.o \
+			  sgx/kmyth_enclave_seal.o \
+			  sgx/kmyth_enclave_unseal.o \
+			  sgx/kmyth_enclave_memory_util.o \
+			  sgx/kmyth_enclave_retrieve_key.o \
+			  sgx/ec_key_cert_unmarshal.o \
+			  sgx/ecdh_util.o \
+			  sgx/sgx_retrieve_key_impl.o \
+			  sgx/aes_gcm.o \
+			  sgx/aes_keywrap_5649pad.o \
+			  sgx/cipher.o \
+			  sgx/memory_util.o \
+			  sgx/kmip_util.o \
+			  sgx/enclave_helper_functions.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 

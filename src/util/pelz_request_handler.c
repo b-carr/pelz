@@ -1,7 +1,7 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 #include "common_table.h"
-#include "aes_keywrap_3394nopad.h"
+#include "cipher/cipher.h"
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
@@ -10,6 +10,10 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
 {
   charbuf outData;
   int index;
+
+  unsigned char* cipher_string = null_terminated_string_from_charbuf(cipher);
+  cipher_t cipher_struct = kmyth_get_cipher_t_from_string(cipher_string);
+  free(cipher_string);
 
   if (table_lookup(KEY, key_id, &index))
   {
