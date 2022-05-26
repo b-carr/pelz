@@ -11,9 +11,10 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
   charbuf outData;
   int index;
 
-  unsigned char* cipher_string = null_terminated_string_from_charbuf(cipher);
-  cipher_t cipher_struct = kmyth_get_cipher_t_from_string(cipher_string);
-  free(cipher_string);
+  //unsigned char* cipher_string = null_terminated_string_from_charbuf(cipher);
+  char* cipher_string = "AES/KeyWrap/RFC3394NoPadding/256";
+  cipher_t cipher_struct = kmyth_get_cipher_t_from_string((char*)cipher_string);
+	 //  free(cipher_string);
 
   if (table_lookup(KEY, key_id, &index))
   {
@@ -29,8 +30,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
     {
       return KEY_OR_DATA_ERROR;
     }
-    if (aes_keywrap_3394nopad_encrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-        data.chars, data.len, &outData.chars, &outData.len))
+    if(cipher_struct.encrypt_fn(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len, data.chars, data.len, &outData.chars, &outData.len))
     {
       return ENCRYPT_ERROR;
     }
@@ -41,8 +41,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
     {
       return KEY_OR_DATA_ERROR;
     }
-    if (aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-        data.chars, data.len, &outData.chars, &outData.len))
+    if (cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len, data.chars, data.len, &outData.chars, &outData.len))
     {
       return DECRYPT_ERROR;
     }
