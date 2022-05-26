@@ -184,7 +184,7 @@ public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf ser
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
+public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf cipher, charbuf tag, charbuf iv, [out] charbuf* output);
 	};
 	untrusted {
 /**

@@ -250,8 +250,8 @@ void thread_process(void *arg)
 
     charbuf key_id;
     charbuf cipher;
-    charbuf iv;
-    charbuf tag;
+    charbuf iv_in;
+    charbuf tag_in;
     charbuf data_in;
     charbuf data_out;
     charbuf request_sig;
@@ -259,9 +259,11 @@ void thread_process(void *arg)
 
     charbuf data;
     charbuf output;
+    charbuf tag;
+    charbuf iv;
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in, &cipher, &iv, &tag, &request_sig, &requestor_cert))
+    if (request_decoder(request, &request_type, &key_id, &data_in, &cipher, &iv_in, &tag_in, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
@@ -276,13 +278,19 @@ void thread_process(void *arg)
     decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
     free_charbuf(&data_in);
 
+    if(request_type == REQ_DEC || request_type == REQ_DEC_SIGNED)
+    {
+      decodeBase64Data(iv_in.chars, iv_in.len, &iv.chars, &iv.len);
+      decodeBase64Data(tag_in.chars, tag_in.len, &tag.chars, &tag.len);
+    }
+
     pthread_mutex_lock(&lock);
-    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+    pelz_request_handler(eid, &status, request_type, key_id, data, cipher, tag, iv, &output);
     if (status == KEK_NOT_LOADED)
     {
       if (key_load(key_id) == 0)
       {
-        pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+        pelz_request_handler(eid, &status, request_type, key_id, data, cipher, tag, iv, &output);
       }
       else
       {
