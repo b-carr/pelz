@@ -41,10 +41,24 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
     {
       return KEY_OR_DATA_ERROR;
     }
-    if (cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len, data.chars, data.len, &outData.chars, &outData.len))
+    // Depending on the cipher we may have to do some data formatting.
+    size_t total_cipher_len = iv.len + tag.len + data.len;
+    unsigned char* ciphertext = malloc(total_cipher_len);
+    if(iv.len > 0)
     {
+      memcpy(ciphertext, iv.chars, iv.len);
+    }
+    memcpy(ciphertext+iv.len, data.chars, data.len);
+    if(tag.len > 0)
+    {
+      memcpy(ciphertext+iv.len+data.len, tag.chars, tag.len);
+    }
+    if (cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len, ciphertext, total_cipher_len, &outData.chars, &outData.len))
+    {
+      free(ciphertext);
       return DECRYPT_ERROR;
     }
+    free(ciphertext);
     break;
   default:
     return REQUEST_TYPE_ERROR;

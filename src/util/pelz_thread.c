@@ -280,8 +280,14 @@ void thread_process(void *arg)
 
     if(request_type == REQ_DEC || request_type == REQ_DEC_SIGNED)
     {
-      decodeBase64Data(iv_in.chars, iv_in.len, &iv.chars, &iv.len);
-      decodeBase64Data(tag_in.chars, tag_in.len, &tag.chars, &tag.len);
+      if(iv_in.len > 0)
+	{
+	  decodeBase64Data(iv_in.chars, iv_in.len, &iv.chars, &iv.len);
+	}
+      if(tag_in.len > 0)
+	{
+          decodeBase64Data(tag_in.chars, tag_in.len, &tag.chars, &tag.len);
+	}
     }
 
     pthread_mutex_lock(&lock);
