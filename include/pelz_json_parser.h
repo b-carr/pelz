@@ -30,7 +30,7 @@
  * @return 0 on success, 1 on error
  *
  */
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert, charbuf * data_block, charbuf * cipher);
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf* cipher, charbuf* iv, charbuf* tag, charbuf * request_sig, charbuf * requestor_cert);
 
 /**
  * <pre>

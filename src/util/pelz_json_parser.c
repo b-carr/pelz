@@ -72,8 +72,7 @@ static int get_JSON_int_field(cJSON* json, const char* field_name, int* value)
 }
 
 
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
->>>>>>> upstream/main
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf* cipher, charbuf* iv, charbuf* tag, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
   char *str = NULL;
@@ -110,6 +109,22 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return 1;
   }
 
+  *cipher = get_JSON_string_field(json, "cipher");
+  if(cipher->len == 0 || cipher->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to extract cipher name from JSON.");
+    cJSON_Delete(json);
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(cipher);
+    return 1;
+  }
+
+  // These fields may not be present, so don't error out if we fail
+  // to get them from the JSON.
+  *iv = get_JSON_string_field(json, "iv");
+  *tag = get_JSON_string_field(json, "tag");	
+  
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
     *request_sig = get_JSON_string_field(json, "request_sig");
@@ -118,6 +133,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       cJSON_Delete(json);
       free_charbuf(key_id);
       free_charbuf(data);
+      free_charbuf(cipher);
+      free_charbuf(iv);
+      free_charbuf(tag);
       free_charbuf(request_sig);
       return 1;
     }
@@ -128,21 +146,24 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       cJSON_Delete(json);
       free_charbuf(key_id);
       free_charbuf(data);
+      free_charbuf(cipher);
+      free_charbuf(iv);
+      free_charbuf(tag);
       free_charbuf(request_sig);
       free_charbuf(requestor_cert);
       return 1;
     }
-  }
   
-  if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
-  {
-    pelz_log(LOG_ERR, "Signature Validation Error");
-    cJSON_Delete(json);
-    free_charbuf(key_id);
-    free_charbuf(data);
-    free_charbuf(request_sig);
-    free_charbuf(requestor_cert);
-    return (1);
+    if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+    {
+	pelz_log(LOG_ERR, "Signature Validation Error");
+	cJSON_Delete(json);
+	free_charbuf(key_id);
+	free_charbuf(data);
+	free_charbuf(request_sig);
+	free_charbuf(requestor_cert);
+	return (1);
+      }
   }
   cJSON_Delete(json);
   return (0);
