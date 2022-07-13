@@ -2,6 +2,7 @@
 #include "pelz_request_handler.h"
 #include "common_table.h"
 #include "cipher/pelz_cipher.h"
+#include "pelz_enclave_utils.h"
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
@@ -50,8 +51,8 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   iv->len = iv_internal.len;
   if(iv->len > 0)
   {
-    ocall_malloc(iv->len, &iv->chars);
-    if(iv->chars == NULL || !sgx_is_outside_enclave(iv->chars, iv->len))
+    iv->chars = safe_ocall_malloc(iv->len);
+    if(iv->chars == NULL)
     {
       free_charbuf(&cipher_data_internal);
       free_charbuf(&iv_internal);
@@ -67,17 +68,17 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   tag->len = tag_internal.len;
   if(tag->len > 0)
   {
-    ocall_malloc(tag->len, &tag->chars);
-    if(tag->chars == NULL || !sgx_is_outside_enclave(tag->chars, tag->len))
+    tag->chars = safe_ocall_malloc(tag->len);
+    if(tag->chars == NULL)
     {
       free_charbuf(&cipher_data_internal);
       free_charbuf(&iv_internal);
       free_charbuf(&tag_internal);
       tag->len = 0;
       cipher_data->len = 0;
-      if(iv->chars != NULL && sgx_is_outside_enclave(iv->chars, iv->len))
+      if(iv->chars != NULL)
       {
-	ocall_free(iv->chars, iv->len);
+	safe_ocall_free(iv->chars, iv->len);
 	iv->chars = NULL;
 	iv->len = 0;
       }
@@ -87,21 +88,21 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   }
   
   cipher_data->len = cipher_data_internal.len;
-  ocall_malloc(cipher_data->len, &cipher_data->chars);
-  if(cipher_data->chars == NULL || !sgx_is_outside_enclave(tag->chars, tag->len))
+  cipher_data->chars = safe_ocall_malloc(cipher_data->len);
+  if(cipher_data->chars == NULL)
   {
     free_charbuf(&cipher_data_internal);
     free_charbuf(&iv_internal);
     free_charbuf(&tag_internal);
-    if(iv->chars != NULL && sgx_is_outside_enclave(iv->chars, iv->len))
+    if(iv->chars != NULL)
     {
-      ocall_free(iv->chars, iv->len);
+      safe_ocall_free(iv->chars, iv->len);
       iv->chars = NULL;
       iv->len = 0;
     }
-    if(tag->chars != NULL && sgx_is_outside_enclave(tag->chars, tag->len))
+    if(tag->chars != NULL)
     {
-      ocall_free(tag->chars, tag->len);
+      safe_ocall_free(tag->chars, tag->len);
       tag->chars = NULL;
       tag->len = 0;
     }
@@ -154,8 +155,8 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   }
   
   plain_data->len = plain_data_internal.len;
-  ocall_malloc(plain_data->len, &plain_data->chars);
-  if(plain_data->chars == NULL || !sgx_is_outside_enclave(plain_data->chars, plain_data->len))
+  plain_data->chars = safe_ocall_malloc(plain_data->len);
+  if(plain_data->chars == NULL)
   {
     plain_data->len = 0;
     free_charbuf(&plain_data_internal);

@@ -16,6 +16,7 @@
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 #include "kmyth_enclave_trusted.h"
+#include "pelz_enclave_utils.h"
 
 Table key_table = {
   .entries = NULL,
@@ -208,9 +209,10 @@ TableResponseStatus table_id(TableType type, int index, charbuf *id)
   }
 
   id->len = table->entries[index].id.len;
-  ocall_malloc(id->len, &id->chars);
-  if(!sgx_is_outside_enclave(id->chars, id->len))
+  id->chars = safe_ocall_malloc(id->len);
+  if(id->chars == NULL)
   {
+    id->len = 0;
     return ERR;
   }
   memcpy(id->chars, table->entries[index].id.chars, id->len);
