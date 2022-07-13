@@ -37,8 +37,10 @@ void ocall_malloc(size_t size, unsigned char **buf)
 
 void ocall_free(void *ptr, size_t len)
 {
+  
   secure_memset(ptr, 0, len);
   free(ptr);
+  ptr = NULL;
 }
 
 ExtensionType get_file_ext(char *filename)

@@ -209,6 +209,10 @@ TableResponseStatus table_id(TableType type, int index, charbuf *id)
 
   id->len = table->entries[index].id.len;
   ocall_malloc(id->len, &id->chars);
+  if(!sgx_is_outside_enclave(id->chars, id->len))
+  {
+    return ERR;
+  }
   memcpy(id->chars, table->entries[index].id.chars, id->len);
   return OK;
 }
