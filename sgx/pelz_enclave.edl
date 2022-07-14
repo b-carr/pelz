@@ -238,9 +238,8 @@ public RequestResponseStatus pelz_decrypt_request_handler(RequestType request_ty
 	untrusted {
 /**
  * <pre>
- * Malloc untrusted memory from within the enclave. The result must
- * be checked to ensure it lies outside the enclave by calling
- * sgx_is_outside_enclave(*buf, size);
+ * Malloc untrusted memory from within the enclave. This should never
+ * be called directly. Instead you should use safe_ocall_malloc.
  * <pre>
  *
  * @param[in]     size the size to allocate (in bytes).
@@ -253,10 +252,8 @@ void ocall_malloc(size_t size, [user_check] unsigned char** buf);
 
 /**
  * <pre>
- * Frees untrusted memory from within the enclave. If the length of the
- * buffer is available the caller should check that it is entirely outside
- * enclave memory by calling
- * sgx_is_outside_enclave(ptr, len);
+ * Frees untrusted memory from within the enclave. This should never
+ * be called directly. Instead you should use safe_ocall_free.
  * <pre>
  *
  * @param[in] ptr the pointer to be freed
