@@ -150,3 +150,25 @@ int get_pelz_uri_additional_data(UriUriA uri, charbuf * additional_data)
   }
   return 0;
 }
+
+int get_pelz_query_string(UriUriA uri, charbuf* query_string)
+{
+  if(query_string != NULL)
+  {
+    size_t field_length = uri.query.afterLast - uri.query.first;
+    if(field_length <= 0)
+    {
+      pelz_log(LOG_ERR, "Invalid URI query length.");
+      return 1;
+    }
+    *query_string = new_charbuf((size_t) field_length);
+    if(query_string->chars == NULL)
+    {
+      pelz_log(LOG_ERR, "Failed to initialize charbuf.");
+      return 1;
+    }
+    memcpy(query_string->chars, uri.query.first, field_length);
+    return 0;
+  }
+  return 1;
+}

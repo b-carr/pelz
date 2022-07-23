@@ -6,4 +6,5 @@
 int test_pelz_uri_helpers_suite_add_tests(CU_pSuite suite);
 
 void test_scheme_extraction(void);
+void test_query_string_extraction(void);
 #endif

@@ -15,6 +15,10 @@ int test_pelz_uri_helpers_suite_add_tests(CU_pSuite suite)
   {
     return 1;
   }
+  if (NULL == CU_add_test(suite, "Test query string extraction", test_query_string_extraction))
+  {
+    return 1;
+  }
   return 0;
 }
 
@@ -74,5 +78,20 @@ void test_scheme_extraction(void)
   free_charbuf(&key_id);
   free_charbuf(&additional_data);
   uriFreeUriMembersA(&uri);
+  return;
+}
+
+void test_query_string_extraction(void)
+{
+  const char* uri_string = "pelz://common_name/0/key_uid/other_data?file:/filename";
+  const char* query_string = "file:/filename";
+  UriUriA uri;
+  uriParseSingleUriA(&uri, uri_string, NULL);
+  charbuf query_buf;
+  CU_ASSERT(get_pelz_query_string(uri, &query_buf) == 0);
+  CU_ASSERT(query_buf.len == strlen(query_string));
+  CU_ASSERT(memcmp(query_buf.chars, query_string, query_buf.len) == 0);
+  free_charbuf(&query_buf);
+  uriFreeUriMembersA(&uri); 
   return;
 }
