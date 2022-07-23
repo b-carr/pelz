@@ -15,7 +15,7 @@ int test_pelz_uri_helpers_suite_add_tests(CU_pSuite suite)
   {
     return 1;
   }
-  if (NULL == CU_add_test(suite, "Test query string extraction", test_query_string_extraction))
+  if (NULL == CU_add_test(suite, "Test get_pelz_query_value", test_get_pelz_query_value))
   {
     return 1;
   }
@@ -81,17 +81,38 @@ void test_scheme_extraction(void)
   return;
 }
 
-void test_query_string_extraction(void)
+void test_get_pelz_query_value(void)
 {
-  const char* uri_string = "pelz://common_name/0/key_uid/other_data?file:/filename";
-  const char* query_string = "file:/filename";
+  const char* uri_string = "pelz://common_name/0/key_uid/other_data?wrapped_key=file:/filename";
+  const char* query_value = "file:/filename";
+  const char* target_query_key = "wrapped_key";
+  const char* missing_query_key = "missing";
   UriUriA uri;
   uriParseSingleUriA(&uri, uri_string, NULL);
   charbuf query_buf;
-  CU_ASSERT(get_pelz_query_string(uri, &query_buf) == 0);
-  CU_ASSERT(query_buf.len == strlen(query_string));
-  CU_ASSERT(memcmp(query_buf.chars, query_string, query_buf.len) == 0);
+
+  // Test that a search for a present key returns the correct value
+  CU_ASSERT(get_pelz_query_value(uri, &query_buf, (char*)target_query_key) == 0);
+  CU_ASSERT(query_buf.len == 14);
+  CU_ASSERT(memcmp(query_buf.chars, query_value, query_buf.len) == 0);
   free_charbuf(&query_buf);
+
+  // Test that a search for a missing key value errors correctly
+  CU_ASSERT(get_pelz_query_value(uri, &query_buf, (char*)missing_query_key) == 1);
+  CU_ASSERT(query_buf.chars == NULL);
+  CU_ASSERT(query_buf.len == 0);
+  free_charbuf(&query_buf);
+  
+  // Test that a search without a query key errors correctly
+  CU_ASSERT(get_pelz_query_value(uri, &query_buf, NULL) == 1);
+  CU_ASSERT(query_buf.chars == NULL);
+  CU_ASSERT(query_buf.len == 0);
+  free_charbuf(&query_buf);
+
+  // Test that a search without a charbuf to hold the result errors correctly
+  CU_ASSERT(get_pelz_query_value(uri, NULL, (char*)target_query_key) == 1);
+  CU_ASSERT(get_pelz_query_value(uri, NULL, (char*)missing_query_key) == 1);
+  
   uriFreeUriMembersA(&uri); 
   return;
 }

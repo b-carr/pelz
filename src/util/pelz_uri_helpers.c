@@ -151,24 +151,39 @@ int get_pelz_uri_additional_data(UriUriA uri, charbuf * additional_data)
   return 0;
 }
 
-int get_pelz_query_string(UriUriA uri, charbuf* query_string)
+int get_pelz_query_value(UriUriA uri, charbuf* query_value, char* query_key)
 {
-  if(query_string != NULL)
+  if(query_value != NULL && query_key != NULL)
   {
-    size_t field_length = uri.query.afterLast - uri.query.first;
-    if(field_length <= 0)
+    UriQueryListA* query_list;
+    UriQueryListA* query_item;
+    size_t item_count;
+    if(uriDissectQueryMallocA(&query_list, (int*)&item_count, uri.query.first, uri.query.afterLast) != URI_SUCCESS)
     {
-      pelz_log(LOG_ERR, "Invalid URI query length.");
       return 1;
     }
-    *query_string = new_charbuf((size_t) field_length);
-    if(query_string->chars == NULL)
+    query_item = query_list;
+    while(query_item != NULL)
     {
-      pelz_log(LOG_ERR, "Failed to initialize charbuf.");
-      return 1;
+      if(query_item->key != NULL)
+      {
+	if(strlen(query_key) == strlen(query_item->key) && memcmp(query_key, query_item->key, strlen(query_key)) == 0)
+	{
+	  *query_value = new_charbuf((size_t)strlen(query_item->value));
+	  if(query_value->chars == NULL)
+	  {
+	    pelz_log(LOG_ERR, "Failed to initialize charbuf.");
+	    uriFreeQueryListA(query_list);
+	    return 1;
+	  }
+	  memcpy(query_value->chars, query_list->value, query_value->len);
+	  uriFreeQueryListA(query_list);
+	  return 0;
+	}
+	query_item = query_item->next;
+      }
     }
-    memcpy(query_string->chars, uri.query.first, field_length);
-    return 0;
+    uriFreeQueryListA(query_list);
   }
   return 1;
 }

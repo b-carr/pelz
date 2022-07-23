@@ -80,7 +80,7 @@ extern "C"
  */
   int get_pelz_uri_additional_data(UriUriA uri, charbuf * additional_data);
 
-  int get_pelz_query_string(UriUriA uri, charbuf* query_string);
+  int get_pelz_query_value(UriUriA uri, charbuf* query_value, char* query_key);
   
 #ifdef __cplusplus
 }
