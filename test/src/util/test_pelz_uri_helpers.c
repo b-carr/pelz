@@ -83,10 +83,13 @@ void test_scheme_extraction(void)
 
 void test_get_pelz_query_value(void)
 {
-  const char* uri_string = "pelz://common_name/0/key_uid/other_data?wrapped_key=file:/filename";
+  const char* uri_string = "pelz://common_name/0/key_uid/other_data?wrapped_key=file:/filename&mode=MODE";
   const char* query_value = "file:/filename";
   const char* target_query_key = "wrapped_key";
   const char* missing_query_key = "missing";
+  const char* mode_tag = "mode";
+  const char* mode_value = "MODE";
+  
   UriUriA uri;
   uriParseSingleUriA(&uri, uri_string, NULL);
   charbuf query_buf;
@@ -97,6 +100,12 @@ void test_get_pelz_query_value(void)
   CU_ASSERT(memcmp(query_buf.chars, query_value, query_buf.len) == 0);
   free_charbuf(&query_buf);
 
+  // Test that we can search for a second value
+  CU_ASSERT(get_pelz_query_value(uri, &query_buf, (char*)mode_tag) == 0);
+  CU_ASSERT(query_buf.len = strlen(mode_value));
+  CU_ASSERT(memcmp(query_buf.chars, mode_value, strlen(mode_value)) == 0);
+  free_charbuf(&query_buf);
+  
   // Test that a search for a missing key value errors correctly
   CU_ASSERT(get_pelz_query_value(uri, &query_buf, (char*)missing_query_key) == 1);
   CU_ASSERT(query_buf.chars == NULL);

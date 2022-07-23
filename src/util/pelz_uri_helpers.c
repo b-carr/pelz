@@ -176,7 +176,7 @@ int get_pelz_query_value(UriUriA uri, charbuf* query_value, char* query_key)
 	    uriFreeQueryListA(query_list);
 	    return 1;
 	  }
-	  memcpy(query_value->chars, query_list->value, query_value->len);
+	  memcpy(query_value->chars, query_item->value, query_value->len);
 	  uriFreeQueryListA(query_list);
 	  return 0;
 	}
