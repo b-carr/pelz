@@ -29,6 +29,10 @@
 #
 #
 
+# This code has been modified from its original version. The original file was:
+#    https://github.com/intel/linux-sgx/tree/master/SampleCode/SealUnseal/Makefile
+*/
+
 ######## SGX SDK Settings ########
 
 SGX_SDK ?= /opt/intel/sgxsdk
