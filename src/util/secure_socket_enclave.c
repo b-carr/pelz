@@ -480,7 +480,7 @@ uint32_t derive_protection_key(uint8_t *key_in, size_t key_in_len,
     }
 
     // set 'salt' value for HKDF
-    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, HKDF_SALT, strlen(HKDF_SALT)) != 1)
+    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, (const unsigned char*)HKDF_SALT, strlen(HKDF_SALT)) != 1)
     {
         EVP_PKEY_CTX_free(pctx);
         return EXIT_FAILURE;
